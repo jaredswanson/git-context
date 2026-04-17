@@ -22,15 +22,31 @@ module GitContext
       h[name] = ->(argv, stdout, stderr) { PresetCommand.new(name, argv, stdout, stderr).run }
     end.freeze
 
-    ACTION_HANDLERS = ACTION_COMMANDS.keys.each_with_object({}) do |name, h|
-      h[name] = ->(_argv, _stdout, _stderr) { raise NotImplementedError, "'#{name}' is not yet implemented" }
-    end.merge(
+    ACTION_HANDLERS = {
+      "repo-init" => lambda { |argv, stdout, stderr|
+        argv = argv.dup
+        repo = CLI.extract_repo_flag(argv) || Dir.pwd
+        git = Git.new(repo)
+        workspace = Workspace.new(repo)
+        RepoInit::Command.new(
+          git: git, workspace: workspace, argv: argv, stdout: stdout, stderr: stderr
+        ).run
+      },
       "commit-apply" => lambda { |argv, stdout, stderr|
         repo   = argv.include?("--repo") ? argv[argv.index("--repo") + 1] : Dir.pwd
         git    = Git.new(repo)
         CommitApply.new(git: git, argv: argv, stdout: stdout, stderr: stderr).run
       }
-    ).freeze
+    }.freeze
+
+    def self.extract_repo_flag(argv)
+      idx = argv.index("--repo")
+      return nil unless idx && argv[idx + 1]
+
+      value = argv[idx + 1]
+      argv.slice!(idx, 2)
+      value
+    end
 
     COMMANDS = PRESET_HANDLERS.merge(ACTION_HANDLERS).freeze
 

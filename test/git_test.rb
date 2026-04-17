@@ -121,6 +121,95 @@ class GitTest < Minitest::Test
   end
 end
 
+class GitWriteMethodsTest < Minitest::Test
+  include TempRepo
+
+  def test_init_repo_initializes_new_repo_on_branch
+    Dir.mktmpdir("git_context_test") do |dir|
+      git_client = GitContext::Git.new(dir)
+
+      git_client.init_repo(branch: "main")
+
+      assert File.directory?(File.join(dir, ".git"))
+    end
+  end
+
+  def test_add_stages_single_file
+    in_temp_repo do |dir|
+      write_file("a.txt", "hi")
+
+      GitContext::Git.new(dir).add("a.txt")
+
+      status = GitContext::Git.new(dir).status
+      assert_includes status, "A  a.txt"
+    end
+  end
+
+  def test_commit_returns_sha_of_new_commit
+    in_temp_repo do |dir|
+      write_file("a.txt", "hi")
+      git_client = GitContext::Git.new(dir)
+      git_client.add("a.txt")
+
+      sha = git_client.commit("Initial commit")
+
+      assert_match(/\A[0-9a-f]{7,40}\z/, sha)
+    end
+  end
+
+  def test_has_commits_returns_false_for_empty_repo
+    in_temp_repo do |dir|
+      refute GitContext::Git.new(dir).has_commits?
+    end
+  end
+
+  def test_has_commits_returns_true_after_commit
+    in_temp_repo do |dir|
+      write_file("a.txt", "hi")
+      git("add a.txt")
+      git("commit -q -m initial")
+
+      assert GitContext::Git.new(dir).has_commits?
+    end
+  end
+
+  def test_current_branch_returns_branch_name
+    in_temp_repo do |dir|
+      write_file("a.txt", "hi")
+      git("add a.txt")
+      git("commit -q -m initial")
+
+      assert_equal "main", GitContext::Git.new(dir).current_branch
+    end
+  end
+
+  def test_add_remote_records_remote
+    in_temp_repo do |dir|
+      GitContext::Git.new(dir).add_remote("origin", "https://example.com/repo.git")
+
+      assert GitContext::Git.new(dir).has_remote?("origin")
+    end
+  end
+
+  def test_has_remote_returns_false_when_absent
+    in_temp_repo do |dir|
+      refute GitContext::Git.new(dir).has_remote?("origin")
+    end
+  end
+
+  def test_config_get_returns_value_when_set
+    in_temp_repo do |dir|
+      assert_equal "Test", GitContext::Git.new(dir).config_get("user.name")
+    end
+  end
+
+  def test_config_get_returns_nil_when_unset
+    in_temp_repo do |dir|
+      assert_nil GitContext::Git.new(dir).config_get("nonexistent.key")
+    end
+  end
+end
+
 class GitLsFilesTest < Minitest::Test
   include TempRepo
 

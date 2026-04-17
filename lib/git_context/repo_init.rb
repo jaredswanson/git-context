@@ -7,3 +7,4 @@ end
 
 require "git_context/repo_init/gitignore_patterns"
 require "git_context/repo_init/stack_detector"
+require "git_context/repo_init/command"

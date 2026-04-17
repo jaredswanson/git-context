@@ -220,16 +220,18 @@ class CLICommandDispatchTest < Minitest::Test
     refute_match(/commit-apply/, out.string)
   end
 
-  def test_repo_init_stub_exits_2_with_not_implemented_message
-    err = StringIO.new
-    exit_status = nil
-    begin
-      GitContext::CLI.new(argv: ["repo-init"], stdout: StringIO.new, stderr: err).run
-    rescue SystemExit => e
-      exit_status = e.status
+  def test_repo_init_dry_run_succeeds_against_temp_dir
+    Dir.mktmpdir("git_context_cli") do |dir|
+      out = StringIO.new
+      err = StringIO.new
+      GitContext::CLI.new(
+        argv: ["repo-init", "--repo", dir, "--dry-run", "--json"],
+        stdout: out, stderr: err
+      ).run
+
+      parsed = JSON.parse(out.string)
+      assert_equal "repo-init", parsed["command"]
     end
-    assert_equal 2, exit_status
-    assert_match(/not yet implemented/, err.string)
   end
 
   def test_commit_apply_missing_message_exits_2

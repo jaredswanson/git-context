@@ -91,14 +91,15 @@ end
 # Test double for GitContext::Workspace. Downstream tasks use this instead of
 # spinning up a real filesystem or shelling out to gh/tea.
 class FakeWorkspace
-  attr_reader :writes
+  attr_reader :writes, :repo_path
 
-  def initialize(files: {}, gh_results: {}, tea_results: {}, available_binaries: Hash.new(true))
+  def initialize(files: {}, gh_results: {}, tea_results: {}, available_binaries: Hash.new(true), repo_path: "/tmp/fake-repo")
     @files = files.transform_values { |v| v.is_a?(Array) ? v : v.lines }
     @writes = {}
     @gh_results = gh_results
     @tea_results = tea_results
     @available_binaries = available_binaries
+    @repo_path = repo_path
   end
 
   def write_file(relative_path, contents, mode: "w")
