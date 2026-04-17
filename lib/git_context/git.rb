@@ -9,8 +9,10 @@ module GitContext
   class Git
     class Error < StandardError; end
 
+    attr_reader :repo_path
+
     def initialize(repo_path)
-      @repo = repo_path
+      @repo_path = repo_path
     end
 
     def status
@@ -51,12 +53,12 @@ module GitContext
 
     def ignored?(path)
       # git check-ignore returns 0 when the path is ignored, 1 when not.
-      _out, _err, status = Open3.capture3("git", "-C", @repo, "check-ignore", "-q", "--", path)
+      _out, _err, status = Open3.capture3("git", "-C", @repo_path, "check-ignore", "-q", "--", path)
       status.exitstatus == 0
     end
 
     def read_file(path)
-      full = File.join(@repo, path)
+      full = File.join(@repo_path, path)
       return "(directory)\n" if File.directory?(full)
 
       File.read(full)
@@ -69,7 +71,7 @@ module GitContext
     end
 
     def run(*args)
-      out, err, status = Open3.capture3("git", "-C", @repo, *args)
+      out, err, status = Open3.capture3("git", "-C", @repo_path, *args)
       raise Error, "git #{args.join(' ')} failed: #{err}" unless status.success?
 
       out
