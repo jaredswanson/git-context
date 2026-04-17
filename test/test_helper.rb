@@ -36,6 +36,58 @@ class FakeGit
   end
 end
 
+# Test double for GitContext::Workspace. Downstream tasks use this instead of
+# spinning up a real filesystem or shelling out to gh/tea.
+class FakeWorkspace
+  attr_reader :writes
+
+  def initialize(files: {}, gh_results: {}, tea_results: {}, available_binaries: Hash.new(true))
+    @files = files.transform_values { |v| v.is_a?(Array) ? v : v.lines }
+    @writes = {}
+    @gh_results = gh_results
+    @tea_results = tea_results
+    @available_binaries = available_binaries
+  end
+
+  def write_file(relative_path, contents, mode: "w")
+    existing = mode == "a" ? (@writes[relative_path] || "") : ""
+    @writes[relative_path] = existing + contents
+  end
+
+  def append_file(relative_path, contents)
+    write_file(relative_path, contents, mode: "a")
+  end
+
+  def file_exists?(relative_path)
+    @files.key?(relative_path) || @writes.key?(relative_path)
+  end
+
+  def read_lines(relative_path)
+    @files.fetch(relative_path, [])
+  end
+
+  def run_gh(*args)
+    canned_result(@gh_results, args)
+  end
+
+  def run_tea(*args)
+    canned_result(@tea_results, args)
+  end
+
+  def which(binary)
+    @available_binaries[binary]
+  end
+
+  private
+
+  def canned_result(map, args)
+    key = args.join(" ")
+    map.fetch(key) do
+      GitContext::Workspace::Result.new(success?: true, output: "", error: "")
+    end
+  end
+end
+
 module TempRepo
   def in_temp_repo
     Dir.mktmpdir("git_context_test") do |dir|
