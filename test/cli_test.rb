@@ -1,36 +1,92 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "stringio"
 
 class CLITest < Minitest::Test
   include TempRepo
 
-  def test_prints_report_for_given_repo_path
+  def test_runs_commit_preset_by_default_tokens_against_repo_flag
     in_temp_repo do |dir|
-      write_file("a.txt", "hi")
-      git("add a.txt")
-      git("commit -q -m initial")
-      write_file("a.txt", "bye")
+      write_file("a.rb", "hi")
+      git("add a.rb")
 
       out = StringIO.new
-      GitContext::CLI.new(argv: [dir], stdout: out).run
+      GitContext::CLI.new(argv: ["commit", "--repo", dir], stdout: out).run
 
-      assert_includes out.string, "Status"
-      assert_includes out.string, "Unstaged changes"
-      assert_includes out.string, "-hi"
-      assert_includes out.string, "+bye"
-      assert_includes out.string, "initial"
+      assert_match(/## Status/, out.string)
+      assert_match(/## Staged changes/, out.string)
     end
   end
 
-  def test_defaults_to_cwd_when_no_arg
-    in_temp_repo do
-      write_file("x.rb", "1")
+  def test_only_flag_restricts_sections
+    in_temp_repo do |dir|
       out = StringIO.new
-      GitContext::CLI.new(argv: [], stdout: out).run
+      GitContext::CLI.new(argv: ["commit", "--repo", dir, "--only", "status"], stdout: out).run
 
-      assert_includes out.string, "x.rb"
+      assert_match(/## Status/, out.string)
+      refute_match(/## Staged changes/, out.string)
     end
+  end
+
+  def test_skip_flag_removes_sections
+    in_temp_repo do |dir|
+      out = StringIO.new
+      GitContext::CLI.new(
+        argv: ["commit", "--repo", dir, "--skip", "staged_diff,unstaged_diff"],
+        stdout: out
+      ).run
+
+      assert_match(/## Status/, out.string)
+      refute_match(/## Staged changes/, out.string)
+      refute_match(/## Unstaged changes/, out.string)
+    end
+  end
+
+  def test_add_flag_is_additive
+    in_temp_repo do |dir|
+      out = StringIO.new
+      GitContext::CLI.new(
+        argv: ["commit", "--repo", dir, "--add", "status"],
+        stdout: out
+      ).run
+
+      assert_equal 1, out.string.scan(/^## Status$/).size
+    end
+  end
+
+  def test_list_sections_prints_tokens_and_exits
+    out = StringIO.new
+    GitContext::CLI.new(argv: ["commit", "--list-sections"], stdout: out).run
+
+    GitContext::Commit::Preset.new.available_tokens.each do |token|
+      assert_match(/^#{Regexp.escape(token)}$/, out.string)
+    end
+  end
+
+  def test_unknown_preset_errors_with_suggestion
+    err = StringIO.new
+    assert_raises(SystemExit) do
+      GitContext::CLI.new(argv: ["bogus"], stdout: StringIO.new, stderr: err).run
+    end
+    assert_match(/unknown preset 'bogus'/, err.string)
+    assert_match(/Available: commit/, err.string)
+  end
+
+  def test_unknown_section_errors_with_suggestion
+    err = StringIO.new
+    assert_raises(SystemExit) do
+      GitContext::CLI.new(
+        argv: ["commit", "--only", "bogus"], stdout: StringIO.new, stderr: err
+      ).run
+    end
+    assert_match(/unknown section 'bogus'/, err.string)
+  end
+
+  def test_missing_preset_arg_prints_help_and_exits
+    err = StringIO.new
+    assert_raises(SystemExit) do
+      GitContext::CLI.new(argv: [], stdout: StringIO.new, stderr: err).run
+    end
+    assert_match(/Usage:/, err.string)
   end
 end

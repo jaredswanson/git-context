@@ -5,6 +5,7 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "minitest/autorun"
 require "tmpdir"
 require "fileutils"
+require "stringio"
 require "git_context"
 
 # Fake Git implementing the methods sections depend on. Shared across tests.
