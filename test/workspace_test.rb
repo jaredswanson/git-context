@@ -65,6 +65,7 @@ class WorkspaceTest < Minitest::Test
     result = workspace.run_gh("--version")
 
     refute result.success?
+    assert_equal "", result.output
     assert_match(/not found/i, result.error)
   end
 
