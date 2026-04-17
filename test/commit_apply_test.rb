@@ -146,6 +146,25 @@ class CommitApplyTest < Minitest::Test
   end
 
   # -----------------------------------------------------------------------
+  # 8b. Multiple message sources → exit 2
+  # -----------------------------------------------------------------------
+  def test_multiple_message_sources_exits_2
+    result = assert_exit(2, argv: ["--message", "foo", "--message-stdin"],
+                            stdin: StringIO.new("bar\n"))
+    assert_match(/exactly one/i, result[:stderr].string)
+  end
+
+  # 8c. Unstaged warning kind is "unstaged_changes_left" in JSON output
+  def test_unstaged_changes_after_commit_warning_kind_in_json
+    git = fake_git(modified_files: ["dirty.rb"])
+    ctx = run_command(argv: ["--message", "fix", "--json"], git: git)
+    ctx[:cmd].run
+
+    parsed = JSON.parse(ctx[:stdout].string)
+    assert_equal "unstaged_changes_left", parsed["warnings"].first["kind"]
+  end
+
+  # -----------------------------------------------------------------------
   # 9. --json output passes JSON.parse and has correct shape
   # -----------------------------------------------------------------------
   def test_json_flag_produces_parseable_output

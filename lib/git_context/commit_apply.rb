@@ -56,6 +56,12 @@ module GitContext
     end
 
     def resolve_message(options)
+      source_flags = [options[:message], options[:message_file], options[:message_stdin]].compact
+      if source_flags.size > 1
+        @stderr.puts "Provide exactly one of --message, --message-file, or --message-stdin."
+        exit(2)
+      end
+
       sources = [
         options[:message],
         options[:message_file] ? File.read(options[:message_file]) : nil,
