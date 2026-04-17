@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require_relative "lib/commit_context/version"
+require_relative "lib/git_context/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "commit-context"
-  spec.version = CommitContext::VERSION
+  spec.name = "git-context"
+  spec.version = GitContext::VERSION
   spec.authors = ["jared"]
   spec.email = ["jared@swansoncloud.com"]
 
-  spec.summary = "Gathers git state into a single commit-context report suitable for AI consumption."
-  spec.description = "Runs a curated set of git commands (status, diffs, recent log, per-file history, untracked file contents) and assembles the output into one structured report. Ships a `commit_context` CLI and a library API composed of small, injectable section objects."
-  spec.homepage = "https://github.com/jaredmswanson/commit-context"
+  spec.summary = "Composable gem that gathers structured git state as context for AI tools and humans."
+  spec.description = "Composes small, duck-typed 'section' objects into structured git-state reports. Ships presets for common workflows (pre-commit snapshot, repo hygiene audit) plus a CLI (`git-context <preset>`) and Ruby API for building custom compositions."
+  spec.homepage = "https://github.com/jaredmswanson/git-context"
   spec.required_ruby_version = ">= 3.2.0"
   spec.license = "MIT"
   spec.metadata["homepage_uri"] = spec.homepage

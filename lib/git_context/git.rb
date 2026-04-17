@@ -2,7 +2,7 @@
 
 require "open3"
 
-module CommitContext
+module GitContext
   # Thin wrapper around shelling out to `git`. This is the single seam where
   # we talk to the outside world — other objects should depend on this, not
   # on Open3 directly, so they can be unit-tested with a fake.

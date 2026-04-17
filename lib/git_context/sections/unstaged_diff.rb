@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
-require "commit_context/truncated_diff"
+require "git_context/truncated_diff"
 
-module CommitContext
+module GitContext
   module Sections
-    class StagedDiff
+    class UnstagedDiff
       def initialize(max_lines_per_file:)
         @max = max_lines_per_file
       end
 
-      def title = "Staged changes"
+      def title = "Unstaged changes"
 
       def render(git)
-        raw = git.diff(staged: true)
+        raw = git.diff(staged: false)
         return "(none)\n" if raw.empty?
 
         TruncatedDiff.new(raw, max_lines_per_file: @max).to_s

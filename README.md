@@ -1,35 +1,43 @@
-# Commit::Context
+# git-context
 
-TODO: Delete this and the text below, and describe your gem
+Gathers the git state you'd normally eyeball before writing a commit message — status, staged/unstaged diffs, recent log, per-file history, and untracked file contents — and assembles it into one structured report. Useful as context for an AI commit-message writer, or just for a quick human overview.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/commit/context`. To experiment with that code, run `bin/console` for an interactive prompt.
+## Install
 
-## Installation
+Add to your Gemfile:
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
-
-Install the gem and add to the application's Gemfile by executing:
-
-```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+```ruby
+gem "git-context"
 ```
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+Or install directly:
 
-```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+```
+gem install git-context
 ```
 
-## Usage
+## CLI
 
-TODO: Write usage instructions here
+```
+git_context [repo_path]
+```
+
+`repo_path` defaults to the current directory. Output is written to stdout.
+
+## Library
+
+```ruby
+require "git_context"
+
+git = GitContext::Git.new("/path/to/repo")
+puts GitContext::Report.new(git: git).to_s
+```
+
+`Report` accepts a custom `sections:` array — each section is any object responding to `#title` and `#render(git)`. Built-in sections live under `GitContext::Sections` (`Status`, `StagedDiff`, `UnstagedDiff`, `RecentLog`, `FileHistory`, `UntrackedFiles`).
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/commit-context.
+```
+bundle install
+bundle exec rake test
+```

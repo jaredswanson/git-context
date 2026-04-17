@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module CommitContext
+module GitContext
   # Caps each per-file section of a unified diff to max_lines_per_file body
   # lines. Body lines are the +/- / context lines that follow the header
   # (diff --git / index / --- / +++ / @@) — we don't count the header itself.

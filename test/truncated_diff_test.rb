@@ -14,14 +14,14 @@ class TruncatedDiffTest < Minitest::Test
       +new
     DIFF
 
-    assert_equal raw, CommitContext::TruncatedDiff.new(raw, max_lines_per_file: 50).to_s
+    assert_equal raw, GitContext::TruncatedDiff.new(raw, max_lines_per_file: 50).to_s
   end
 
   def test_truncates_large_single_file_diff
     body_lines = (1..100).map { |i| "+line #{i}" }
     raw = (["diff --git a/big.rb b/big.rb", "--- a/big.rb", "+++ b/big.rb", "@@ -0,0 +1,100 @@"] + body_lines).join("\n") + "\n"
 
-    out = CommitContext::TruncatedDiff.new(raw, max_lines_per_file: 10).to_s
+    out = GitContext::TruncatedDiff.new(raw, max_lines_per_file: 10).to_s
 
     assert_includes out, "+line 1"
     assert_includes out, "+line 10"
@@ -34,7 +34,7 @@ class TruncatedDiffTest < Minitest::Test
     file_b = ["diff --git a/b.rb b/b.rb", "--- a/b.rb", "+++ b/b.rb", "@@ -0,0 +1,20 @@"] + (1..20).map { |i| "+b#{i}" }
     raw = (file_a + file_b).join("\n") + "\n"
 
-    out = CommitContext::TruncatedDiff.new(raw, max_lines_per_file: 5).to_s
+    out = GitContext::TruncatedDiff.new(raw, max_lines_per_file: 5).to_s
 
     assert_includes out, "+a1"
     assert_includes out, "+a5"
@@ -46,6 +46,6 @@ class TruncatedDiffTest < Minitest::Test
   end
 
   def test_empty_diff_returns_empty_string
-    assert_equal "", CommitContext::TruncatedDiff.new("", max_lines_per_file: 50).to_s
+    assert_equal "", GitContext::TruncatedDiff.new("", max_lines_per_file: 50).to_s
   end
 end

@@ -14,7 +14,7 @@ class CLITest < Minitest::Test
       write_file("a.txt", "bye")
 
       out = StringIO.new
-      CommitContext::CLI.new(argv: [dir], stdout: out).run
+      GitContext::CLI.new(argv: [dir], stdout: out).run
 
       assert_includes out.string, "Status"
       assert_includes out.string, "Unstaged changes"
@@ -28,7 +28,7 @@ class CLITest < Minitest::Test
     in_temp_repo do
       write_file("x.rb", "1")
       out = StringIO.new
-      CommitContext::CLI.new(argv: [], stdout: out).run
+      GitContext::CLI.new(argv: [], stdout: out).run
 
       assert_includes out.string, "x.rb"
     end

@@ -5,7 +5,7 @@ require "test_helper"
 class StatusSectionTest < Minitest::Test
   def test_renders_git_status_output
     git = FakeGit.new(status: "?? foo.rb\n M bar.rb\n")
-    section = CommitContext::Sections::Status.new
+    section = GitContext::Sections::Status.new
 
     assert_equal "Status", section.title
     assert_includes section.render(git), "?? foo.rb"
@@ -13,7 +13,7 @@ class StatusSectionTest < Minitest::Test
   end
 
   def test_renders_clean_marker_when_empty
-    section = CommitContext::Sections::Status.new
+    section = GitContext::Sections::Status.new
     assert_equal "(clean)", section.render(FakeGit.new(status: "")).strip
   end
 end
@@ -21,7 +21,7 @@ end
 class StagedDiffSectionTest < Minitest::Test
   def test_renders_staged_diff_truncated
     git = FakeGit.new(staged_diff: fake_diff("a.rb", 50))
-    section = CommitContext::Sections::StagedDiff.new(max_lines_per_file: 5)
+    section = GitContext::Sections::StagedDiff.new(max_lines_per_file: 5)
 
     out = section.render(git)
 
@@ -31,7 +31,7 @@ class StagedDiffSectionTest < Minitest::Test
   end
 
   def test_none_marker_when_empty
-    section = CommitContext::Sections::StagedDiff.new(max_lines_per_file: 5)
+    section = GitContext::Sections::StagedDiff.new(max_lines_per_file: 5)
     assert_equal "(none)", section.render(FakeGit.new).strip
   end
 
@@ -46,7 +46,7 @@ end
 class UnstagedDiffSectionTest < Minitest::Test
   def test_uses_unstaged_diff
     git = FakeGit.new(unstaged_diff: "diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -1 +1 @@\n-a\n+b\n")
-    section = CommitContext::Sections::UnstagedDiff.new(max_lines_per_file: 100)
+    section = GitContext::Sections::UnstagedDiff.new(max_lines_per_file: 100)
 
     assert_equal "Unstaged changes", section.title
     assert_includes section.render(git), "+b"
@@ -56,7 +56,7 @@ end
 class RecentLogSectionTest < Minitest::Test
   def test_shows_recent_commits
     git = FakeGit.new(recent_log: "abc123 first\ndef456 second\n")
-    section = CommitContext::Sections::RecentLog.new(limit: 5)
+    section = GitContext::Sections::RecentLog.new(limit: 5)
 
     assert_equal "Recent commits", section.title
     assert_includes section.render(git), "abc123 first"
@@ -69,7 +69,7 @@ class FileHistorySectionTest < Minitest::Test
       modified_files: ["a.rb", "b.rb"],
       file_logs: { "a.rb" => "aaa added a\n", "b.rb" => "bbb fixed b\n" }
     )
-    section = CommitContext::Sections::FileHistory.new(limit: 3)
+    section = GitContext::Sections::FileHistory.new(limit: 3)
 
     out = section.render(git)
 
@@ -81,7 +81,7 @@ class FileHistorySectionTest < Minitest::Test
   end
 
   def test_empty_when_no_modified_files
-    section = CommitContext::Sections::FileHistory.new(limit: 3)
+    section = GitContext::Sections::FileHistory.new(limit: 3)
     assert_equal "(none)", section.render(FakeGit.new).strip
   end
 end
@@ -92,7 +92,7 @@ class UntrackedFilesSectionTest < Minitest::Test
       untracked_files: ["new.rb"],
       file_contents: { "new.rb" => "hello world\n" }
     )
-    section = CommitContext::Sections::UntrackedFiles.new
+    section = GitContext::Sections::UntrackedFiles.new
 
     out = section.render(git)
 
@@ -102,7 +102,7 @@ class UntrackedFilesSectionTest < Minitest::Test
   end
 
   def test_none_marker_when_no_untracked
-    section = CommitContext::Sections::UntrackedFiles.new
+    section = GitContext::Sections::UntrackedFiles.new
     assert_equal "(none)", section.render(FakeGit.new).strip
   end
 end

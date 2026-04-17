@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-module CommitContext
-  # Composes sections into a single commit-context string. Collaborators
+module GitContext
+  # Composes sections into a single git-context string. Collaborators
   # (git + sections) are injected — Report itself has no knowledge of shell
   # or git commands.
   class Report

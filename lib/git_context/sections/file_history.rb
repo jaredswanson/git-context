@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module CommitContext
+module GitContext
   module Sections
     class FileHistory
       def initialize(limit:)

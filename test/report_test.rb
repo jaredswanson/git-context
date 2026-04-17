@@ -14,7 +14,7 @@ end
 class ReportTest < Minitest::Test
   def test_renders_each_section_with_header_and_separator
     sections = [FakeSection.new("One", "body-1\n"), FakeSection.new("Two", "body-2\n")]
-    report = CommitContext::Report.new(git: Object.new, sections: sections)
+    report = GitContext::Report.new(git: Object.new, sections: sections)
 
     out = report.to_s
 
@@ -34,7 +34,7 @@ class ReportTest < Minitest::Test
       modified_files: [],
       untracked_files: []
     )
-    report = CommitContext::Report.new(git: git)
+    report = GitContext::Report.new(git: git)
 
     out = report.to_s
 

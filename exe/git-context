@@ -2,6 +2,6 @@
 # frozen_string_literal: true
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
-require "commit_context"
+require "git_context"
 
-CommitContext::CLI.new(argv: ARGV).run
+GitContext::CLI.new(argv: ARGV).run

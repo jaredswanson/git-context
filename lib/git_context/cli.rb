@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module CommitContext
+module GitContext
   class CLI
     def initialize(argv:, stdout: $stdout)
       @argv = argv
