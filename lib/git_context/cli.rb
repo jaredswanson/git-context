@@ -23,7 +23,7 @@ module GitContext
       preset = resolve_preset(options.fetch(:preset))
 
       if options[:list_sections]
-        preset.available_tokens.each { |t| @stdout.puts t }
+        render_list_sections(preset)
         return
       end
 
@@ -40,21 +40,29 @@ module GitContext
 
     def handle_early_flags
       if (@argv & %w[--help -h]).any?
-        @stdout.puts build_parser({}).help
+        @stdout.puts build_parser.help
         exit(0)
       end
 
-      if @argv == ["--list-sections"] || (@argv.length == 1 && @argv.first == "--list-sections")
-        PRESETS.each do |name, factory|
-          preset = factory.call
-          @stdout.puts "#{name}:"
-          preset.available_tokens.each { |t| @stdout.puts "  #{t}" }
-        end
+      if @argv == ["--list-sections"]
+        render_list_sections(nil)
         exit(0)
       end
     end
 
-    def build_parser(options)
+    def render_list_sections(preset)
+      if preset
+        preset.available_tokens.each { |t| @stdout.puts t }
+      else
+        PRESETS.each do |name, factory|
+          p = factory.call
+          @stdout.puts "#{name}:"
+          p.available_tokens.each { |t| @stdout.puts "  #{t}" }
+        end
+      end
+    end
+
+    def build_parser(options = {})
       preset_list = PRESETS.keys.join(", ")
       OptionParser.new do |o|
         o.banner = "Usage: git-context <preset> [options]\n\nPresets: #{preset_list}\n\nOptions:"
