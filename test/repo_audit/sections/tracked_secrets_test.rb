@@ -52,4 +52,31 @@ class TrackedSecretsSectionTest < Minitest::Test
       assert_match(/No tracked secrets/, out)
     end
   end
+
+  def test_does_not_flag_own_source_files
+    git = FakeGit.new(ls_files: [
+      "lib/git_context/repo_audit/sections/tracked_secrets.rb",
+      "test/repo_audit/sections/tracked_secrets_test.rb"
+    ])
+
+    out = GitContext::RepoAudit::Sections::TrackedSecrets.new.render(git)
+
+    assert_match(/No tracked secrets/, out)
+  end
+
+  def test_flags_secrets_yml
+    git = FakeGit.new(ls_files: ["config/secrets.yml"])
+
+    out = GitContext::RepoAudit::Sections::TrackedSecrets.new.render(git)
+
+    assert_match(/secrets\.yml/, out)
+  end
+
+  def test_flags_credentials_json
+    git = FakeGit.new(ls_files: ["app.credentials.json"])
+
+    out = GitContext::RepoAudit::Sections::TrackedSecrets.new.render(git)
+
+    assert_match(/app\.credentials\.json/, out)
+  end
 end

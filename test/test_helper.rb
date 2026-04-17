@@ -22,6 +22,7 @@ class FakeGit
   def untracked_files; @canned[:untracked_files] || []; end
   def file_log(path, limit:); @file_logs.fetch(path, ""); end
   def read_file(path); (@canned[:file_contents] || {}).fetch(path, ""); end
+  def ls_files; @canned[:ls_files] || []; end
 end
 
 module TempRepo
