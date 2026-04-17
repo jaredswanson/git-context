@@ -18,6 +18,7 @@ module GitContext
     end
 
     def run
+      handle_early_flags
       options = parse_options
       preset = resolve_preset(options.fetch(:preset))
 
@@ -37,10 +38,26 @@ module GitContext
 
     private
 
-    def parse_options
-      options = { only: nil, add: [], skip: [] }
-      parser = OptionParser.new do |o|
-        o.banner = "Usage: git-context <preset> [options]"
+    def handle_early_flags
+      if (@argv & %w[--help -h]).any?
+        @stdout.puts build_parser({}).help
+        exit(0)
+      end
+
+      if @argv == ["--list-sections"] || (@argv.length == 1 && @argv.first == "--list-sections")
+        PRESETS.each do |name, factory|
+          preset = factory.call
+          @stdout.puts "#{name}:"
+          preset.available_tokens.each { |t| @stdout.puts "  #{t}" }
+        end
+        exit(0)
+      end
+    end
+
+    def build_parser(options)
+      preset_list = PRESETS.keys.join(", ")
+      OptionParser.new do |o|
+        o.banner = "Usage: git-context <preset> [options]\n\nPresets: #{preset_list}\n\nOptions:"
         o.on("--repo PATH", "Repo path (default: cwd)") { |v| options[:repo] = v }
         o.on("--only LIST", Array, "Run only these sections") { |v| options[:only] = v }
         o.on("--add LIST", Array, "Add sections to preset") { |v| options[:add] = v }
@@ -48,6 +65,11 @@ module GitContext
         o.on("--list-sections", "List available sections and exit") { options[:list_sections] = true }
         o.on("-h", "--help", "Show this help") { @stdout.puts o; exit(0) }
       end
+    end
+
+    def parse_options
+      options = { only: nil, add: [], skip: [] }
+      parser = build_parser(options)
 
       preset = @argv.shift
       if preset.nil? || preset.start_with?("-")

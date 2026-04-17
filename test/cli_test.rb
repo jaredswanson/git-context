@@ -89,6 +89,73 @@ class CLITest < Minitest::Test
     end
     assert_match(/Usage:/, err.string)
   end
+
+  def test_help_flag_exits_zero_and_prints_to_stdout
+    out = StringIO.new
+    exit_status = nil
+    begin
+      GitContext::CLI.new(argv: ["--help"], stdout: out).run
+    rescue SystemExit => e
+      exit_status = e.status
+    end
+    assert_equal 0, exit_status
+    assert_match(/Usage:/, out.string)
+  end
+
+  def test_short_h_flag_exits_zero
+    out = StringIO.new
+    exit_status = nil
+    begin
+      GitContext::CLI.new(argv: ["-h"], stdout: out).run
+    rescue SystemExit => e
+      exit_status = e.status
+    end
+    assert_equal 0, exit_status
+    assert_match(/Usage:/, out.string)
+  end
+
+  def test_help_output_lists_available_presets
+    out = StringIO.new
+    begin
+      GitContext::CLI.new(argv: ["--help"], stdout: out).run
+    rescue SystemExit
+    end
+    assert_match(/commit/, out.string)
+    assert_match(/repo-audit/, out.string)
+  end
+
+  def test_list_sections_without_preset_exits_zero
+    out = StringIO.new
+    exit_status = nil
+    begin
+      GitContext::CLI.new(argv: ["--list-sections"], stdout: out).run
+    rescue SystemExit => e
+      exit_status = e.status
+    end
+    assert_equal 0, exit_status
+  end
+
+  def test_list_sections_without_preset_groups_by_preset
+    out = StringIO.new
+    begin
+      GitContext::CLI.new(argv: ["--list-sections"], stdout: out).run
+    rescue SystemExit
+    end
+    assert_match(/^commit:$/, out.string)
+    assert_match(/^repo-audit:$/, out.string)
+    assert_match(/status/, out.string)
+    assert_match(/gitignore_gaps/, out.string)
+  end
+
+  def test_list_sections_with_preset_still_works
+    out = StringIO.new
+    GitContext::CLI.new(argv: ["commit", "--list-sections"], stdout: out).run
+
+    GitContext::Commit::Preset.new.available_tokens.each do |token|
+      assert_match(/^#{Regexp.escape(token)}$/, out.string)
+    end
+    refute_match(/^commit:$/, out.string)
+  end
 end
 
 class CLIRepoAuditTest < Minitest::Test
