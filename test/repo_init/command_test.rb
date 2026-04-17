@@ -181,11 +181,13 @@ class RepoInitCommandTest < Minitest::Test
     assert_includes added, "/doc/"
   end
 
-  def test_help_flag_exits_zero
+  def test_help_flag_prints_help_and_returns
     git = FakeGit.new(entries: { "." => [] })
     ctx = build(argv: ["--help"], git: git)
 
-    assert_raises(SystemExit) { ctx[:cmd].run }
+    ctx[:cmd].run
+
+    assert_match(/Usage: git-context repo-init/, ctx[:stdout].string)
   end
 
   def test_non_json_mode_emits_human_readable_output

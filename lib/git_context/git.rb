@@ -78,8 +78,10 @@ module GitContext
     # Initializes a git repo at @repo_path on the given branch.
     def init_repo(branch: "main")
       FileUtils.mkdir_p(@repo_path) unless File.directory?(@repo_path)
-      _out, _err, status = Open3.capture3("git", "init", "-q", "-b", branch, chdir: @repo_path)
-      status.success?
+      run("init", "-q", "-b", branch)
+      true
+    rescue Error
+      false
     end
 
     # Stages a single path. Never runs `git add -A`.
@@ -97,8 +99,10 @@ module GitContext
     end
 
     def has_commits?
-      _out, _err, status = Open3.capture3("git", "-C", @repo_path, "log", "-1", "--oneline")
-      status.success?
+      run("log", "-1", "--oneline")
+      true
+    rescue Error
+      false
     end
 
     def current_branch
@@ -122,11 +126,10 @@ module GitContext
     end
 
     def config_get(key)
-      out, _err, status = Open3.capture3("git", "-C", @repo_path, "config", "--get", key)
-      return nil unless status.success?
-
-      value = out.strip
+      value = run("config", "--get", key).strip
       value.empty? ? nil : value
+    rescue Error
+      nil
     end
 
     def read_file(path)

@@ -64,7 +64,6 @@ module GitContext
           end
         end
         parser.parse!(@argv)
-        exit(0) if @options[:help_shown]
       end
 
       def record_audit_findings
@@ -81,8 +80,8 @@ module GitContext
       end
 
       def detect_stacks
-        detector = StackDetector.new(git: @git)
-        stacks = detector.stacks
+        @stack_detector = StackDetector.new(git: @git)
+        stacks = @stack_detector.stacks
         @report.merge_context(
           "stack" => stacks.first.to_s,
           "detected_stacks" => stacks.map(&:to_s)
@@ -91,8 +90,7 @@ module GitContext
       end
 
       def heuristic_defaults
-        detector = StackDetector.new(git: @git)
-        open_source = detector.likely_open_source?
+        open_source = @stack_detector.likely_open_source?
         if open_source.value
           host = @options[:host] || "github"
           visibility = @options[:visibility] || "public"
@@ -171,7 +169,6 @@ module GitContext
             description: "Create initial commit including .gitignore",
             details: { "files" => [".gitignore"] }
           )
-          @initial_commit_emitted = false
           return
         end
 
@@ -182,11 +179,13 @@ module GitContext
           description: "Created initial commit",
           details: { "sha" => sha, "files" => [".gitignore"] }
         )
-        @initial_commit_emitted = true
       end
 
       def maybe_license(defaults)
-        return if @workspace.file_exists?("LICENSE") && propose_replace_license
+        if @workspace.file_exists?("LICENSE")
+          propose_replace_license
+          return
+        end
         return unless should_create_license?(defaults)
 
         if @options[:dry_run]
@@ -208,11 +207,9 @@ module GitContext
           details: { "path" => "LICENSE" },
           suggested_command: "rm LICENSE && git-context repo-init --yes"
         )
-        true
       end
 
       def should_create_license?(defaults)
-        return false if @workspace.file_exists?("LICENSE")
         return false unless defaults[:open_source]
         return false if @options[:visibility] == "private"
 
@@ -221,14 +218,15 @@ module GitContext
 
       def write_license
         holder = @git.config_get("user.name") || ENV["GIT_AUTHOR_NAME"] || "Copyright Holder"
-        body = format(GitContext::RepoInit::Licenses::MIT, year: 2026, holder: holder)
+        year = Time.now.year
+        body = format(GitContext::RepoInit::Licenses::MIT, year: year, holder: holder)
         @workspace.write_file("LICENSE", body)
         @git.add("LICENSE")
         @git.commit("Add MIT LICENSE") if @git.has_commits?
         @report.add_action(
           kind: "license_created",
           description: "Created MIT LICENSE",
-          details: { "holder" => holder, "year" => 2026 }
+          details: { "holder" => holder, "year" => year }
         )
       end
 
