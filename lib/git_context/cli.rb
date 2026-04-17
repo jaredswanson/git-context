@@ -24,7 +24,13 @@ module GitContext
 
     ACTION_HANDLERS = ACTION_COMMANDS.keys.each_with_object({}) do |name, h|
       h[name] = ->(_argv, _stdout, _stderr) { raise NotImplementedError, "'#{name}' is not yet implemented" }
-    end.freeze
+    end.merge(
+      "commit-apply" => lambda { |argv, stdout, stderr|
+        repo   = argv.include?("--repo") ? argv[argv.index("--repo") + 1] : Dir.pwd
+        git    = Git.new(repo)
+        CommitApply.new(git: git, argv: argv, stdout: stdout, stderr: stderr).run
+      }
+    ).freeze
 
     COMMANDS = PRESET_HANDLERS.merge(ACTION_HANDLERS).freeze
 

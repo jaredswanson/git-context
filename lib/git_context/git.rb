@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "open3"
+require "fileutils"
 
 module GitContext
   # Thin wrapper around shelling out to `git`. This is the single seam where
@@ -72,6 +73,60 @@ module GitContext
       raise ArgumentError, "subpath escapes repo root" unless resolved == @repo_path || resolved.start_with?("#{@repo_path}/")
 
       Dir.children(resolved)
+    end
+
+    # Initializes a git repo at @repo_path on the given branch.
+    def init_repo(branch: "main")
+      FileUtils.mkdir_p(@repo_path) unless File.directory?(@repo_path)
+      _out, _err, status = Open3.capture3("git", "init", "-q", "-b", branch, chdir: @repo_path)
+      status.success?
+    end
+
+    # Stages a single path. Never runs `git add -A`.
+    def add(path)
+      run("add", "--", path)
+      true
+    rescue Error
+      false
+    end
+
+    # Commits staged changes and returns the new commit SHA (short form).
+    def commit(message)
+      run("commit", "-q", "-m", message)
+      run("rev-parse", "--short", "HEAD").strip
+    end
+
+    def has_commits?
+      _out, _err, status = Open3.capture3("git", "-C", @repo_path, "log", "-1", "--oneline")
+      status.success?
+    end
+
+    def current_branch
+      run("rev-parse", "--abbrev-ref", "HEAD").strip
+    rescue Error
+      ""
+    end
+
+    def add_remote(name, url)
+      run("remote", "add", name, url)
+      true
+    rescue Error
+      false
+    end
+
+    def has_remote?(name)
+      names = run("remote").split("\n").map(&:strip)
+      names.include?(name)
+    rescue Error
+      false
+    end
+
+    def config_get(key)
+      out, _err, status = Open3.capture3("git", "-C", @repo_path, "config", "--get", key)
+      return nil unless status.success?
+
+      value = out.strip
+      value.empty? ? nil : value
     end
 
     def read_file(path)

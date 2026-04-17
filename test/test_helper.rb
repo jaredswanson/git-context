@@ -10,9 +10,47 @@ require "git_context"
 
 # Fake Git implementing the methods sections depend on. Shared across tests.
 class FakeGit
+  attr_reader :calls
+
   def initialize(**canned)
     @canned = canned
     @file_logs = canned[:file_logs] || {}
+    @calls = []
+    @has_commits = canned.fetch(:has_commits, false)
+    @remotes = (canned[:remotes] || []).dup
+    @config = canned[:config] || { "user.name" => "Test User" }
+  end
+
+  def init_repo(branch: "main")
+    @calls << [:init_repo, { branch: branch }]
+    true
+  end
+
+  def add(path)
+    @calls << [:add, path]
+    true
+  end
+
+  def has_commits?
+    @has_commits
+  end
+
+  def current_branch
+    @canned[:current_branch] || "main"
+  end
+
+  def add_remote(name, url)
+    @calls << [:add_remote, name, url]
+    @remotes << name
+    true
+  end
+
+  def has_remote?(name)
+    @remotes.include?(name)
+  end
+
+  def config_get(key)
+    @config[key]
   end
 
   def status; @canned[:status] || ""; end
@@ -33,6 +71,20 @@ class FakeGit
 
   def ignored?(path)
     (@canned[:ignored] || {})[path] || false
+  end
+
+  # Records the committed message and returns a canned SHA. The recorded
+  # messages array lets tests assert that commit was called with the right text.
+  def commit(message)
+    @commits ||= []
+    @commits << message
+    @calls << [:commit, message]
+    @has_commits = true
+    @canned[:commit_sha] || "abc1234"
+  end
+
+  def commits
+    @commits || []
   end
 end
 

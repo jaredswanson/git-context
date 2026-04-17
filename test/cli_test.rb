@@ -232,7 +232,7 @@ class CLICommandDispatchTest < Minitest::Test
     assert_match(/not yet implemented/, err.string)
   end
 
-  def test_commit_apply_stub_exits_2_with_not_implemented_message
+  def test_commit_apply_missing_message_exits_2
     err = StringIO.new
     exit_status = nil
     begin
@@ -241,6 +241,6 @@ class CLICommandDispatchTest < Minitest::Test
       exit_status = e.status
     end
     assert_equal 2, exit_status
-    assert_match(/not yet implemented/, err.string)
+    assert_match(/message/i, err.string)
   end
 end
