@@ -17,7 +17,8 @@ module GitContext
         end
 
         def render(git)
-          missing = STANDARDS.reject { |s| present?(git.repo_path, s) }
+          root_entries = git.entries
+          missing = STANDARDS.reject { |s| present?(root_entries, s) }
           return "All standard files present\n" if missing.empty?
 
           missing.map { |s| "- #{s[:label]}" }.join("\n") + "\n"
@@ -25,12 +26,11 @@ module GitContext
 
         private
 
-        def present?(repo_path, standard)
-          entries = Dir.children(repo_path)
+        def present?(root_entries, standard)
           if standard[:exact]
-            entries.include?(standard[:prefix])
+            root_entries.include?(standard[:prefix])
           else
-            entries.any? { |e| e.downcase.start_with?(standard[:prefix]) }
+            root_entries.any? { |e| e.downcase.start_with?(standard[:prefix]) }
           end
         end
       end

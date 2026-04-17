@@ -4,56 +4,42 @@ require "test_helper"
 require "git_context/repo_audit/sections/missing_standard_files"
 
 class MissingStandardFilesSectionTest < Minitest::Test
-  include TempRepo
-
   def test_title
     section = GitContext::RepoAudit::Sections::MissingStandardFiles.new
     assert_equal "Missing standard files", section.title
   end
 
   def test_reports_missing_files
-    in_temp_repo do |dir|
-      section = GitContext::RepoAudit::Sections::MissingStandardFiles.new
-      out = section.render(GitContext::Git.new(dir))
+    git = FakeGit.new(entries: { "." => [] })
 
-      assert_includes out, "README"
-      assert_includes out, "LICENSE"
-      assert_includes out, ".gitignore"
-    end
+    out = GitContext::RepoAudit::Sections::MissingStandardFiles.new.render(git)
+
+    assert_includes out, "README"
+    assert_includes out, "LICENSE"
+    assert_includes out, ".gitignore"
   end
 
   def test_reports_all_present_when_present
-    in_temp_repo do |dir|
-      write_file("README.md", "x")
-      write_file("LICENSE", "x")
-      write_file(".gitignore", "x")
+    git = FakeGit.new(entries: { "." => ["README.md", "LICENSE", ".gitignore"] })
 
-      section = GitContext::RepoAudit::Sections::MissingStandardFiles.new
-      out = section.render(GitContext::Git.new(dir))
+    out = GitContext::RepoAudit::Sections::MissingStandardFiles.new.render(git)
 
-      assert_match(/All standard files present/, out)
-    end
+    assert_match(/All standard files present/, out)
   end
 
   def test_readme_match_is_case_insensitive
-    in_temp_repo do |dir|
-      write_file("readme.md", "x")
+    git = FakeGit.new(entries: { "." => ["readme.md", "LICENSE", ".gitignore"] })
 
-      section = GitContext::RepoAudit::Sections::MissingStandardFiles.new
-      out = section.render(GitContext::Git.new(dir))
+    out = GitContext::RepoAudit::Sections::MissingStandardFiles.new.render(git)
 
-      refute_match(/README/, out)
-    end
+    refute_match(/README/, out)
   end
 
   def test_readme_prefix_match
-    in_temp_repo do |dir|
-      write_file("README.rst", "x")
+    git = FakeGit.new(entries: { "." => ["README.rst", "LICENSE", ".gitignore"] })
 
-      section = GitContext::RepoAudit::Sections::MissingStandardFiles.new
-      out = section.render(GitContext::Git.new(dir))
+    out = GitContext::RepoAudit::Sections::MissingStandardFiles.new.render(git)
 
-      refute_match(/^README/, out.strip)
-    end
+    refute_match(/^README/, out.strip)
   end
 end

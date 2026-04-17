@@ -167,3 +167,68 @@ class GitIgnoredTest < Minitest::Test
     end
   end
 end
+
+class GitWalkWorkingTreeTest < Minitest::Test
+  include TempRepo
+
+  def test_walk_working_tree_includes_tracked_and_untracked_files
+    in_temp_repo do |dir|
+      write_file("tracked.rb", "x")
+      git("add tracked.rb")
+      git("commit -q -m init")
+      write_file("untracked.txt", "y")
+
+      paths = GitContext::Git.new(dir).walk_working_tree
+
+      assert_includes paths, "tracked.rb"
+      assert_includes paths, "untracked.txt"
+    end
+  end
+
+  def test_walk_working_tree_prunes_dot_git
+    in_temp_repo do |dir|
+      write_file("app.rb", "x")
+
+      paths = GitContext::Git.new(dir).walk_working_tree
+
+      refute paths.any? { |p| p.start_with?(".git") },
+             "Expected .git to be pruned, but found: #{paths.select { |p| p.start_with?('.git') }.inspect}"
+    end
+  end
+
+  def test_walk_working_tree_appends_slash_to_directories
+    in_temp_repo do |dir|
+      write_file("sub/file.rb", "x")
+
+      paths = GitContext::Git.new(dir).walk_working_tree
+
+      assert_includes paths, "sub/"
+    end
+  end
+
+  def test_entries_returns_direct_children_of_repo_root
+    in_temp_repo do |dir|
+      write_file("a.rb", "x")
+      write_file("b.rb", "x")
+      Dir.mkdir(File.join(dir, "subdir"))
+
+      children = GitContext::Git.new(dir).entries
+
+      assert_includes children, "a.rb"
+      assert_includes children, "b.rb"
+      assert_includes children, "subdir"
+    end
+  end
+
+  def test_entries_returns_children_of_subpath
+    in_temp_repo do |dir|
+      write_file("lib/foo.rb", "x")
+      write_file("lib/bar.rb", "x")
+
+      children = GitContext::Git.new(dir).entries("lib")
+
+      assert_includes children, "foo.rb"
+      assert_includes children, "bar.rb"
+    end
+  end
+end

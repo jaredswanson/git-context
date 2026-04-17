@@ -57,6 +57,23 @@ module GitContext
       status.exitstatus == 0
     end
 
+    # Returns an Array<String> of repo-relative paths. Directories get a
+    # trailing "/". The ".git" directory is pruned. Order is not guaranteed.
+    def walk_working_tree
+      paths = []
+      walk_dir(@repo_path, "", paths)
+      paths
+    end
+
+    # Returns Dir.children(File.join(@repo_path, subpath)). No filtering, no
+    # sorting. Raises if the resolved path escapes the repo.
+    def entries(subpath = ".")
+      resolved = File.expand_path(File.join(@repo_path, subpath))
+      raise ArgumentError, "subpath escapes repo root" unless resolved.start_with?(@repo_path)
+
+      Dir.children(resolved)
+    end
+
     def read_file(path)
       full = File.join(@repo_path, path)
       return "(directory)\n" if File.directory?(full)
@@ -65,6 +82,22 @@ module GitContext
     end
 
     private
+
+    def walk_dir(abs_dir, prefix, paths)
+      Dir.children(abs_dir).each do |child|
+        next if prefix.empty? && child == ".git"
+
+        abs_child = File.join(abs_dir, child)
+        rel = prefix.empty? ? child : "#{prefix}#{child}"
+
+        if File.directory?(abs_child)
+          paths << "#{rel}/"
+          walk_dir(abs_child, "#{rel}/", paths)
+        else
+          paths << rel
+        end
+      end
+    end
 
     def parse_name_status(output)
       output.split("\n").reject(&:empty?)

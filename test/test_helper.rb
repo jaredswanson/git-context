@@ -23,6 +23,17 @@ class FakeGit
   def file_log(path, limit:); @file_logs.fetch(path, ""); end
   def read_file(path); (@canned[:file_contents] || {}).fetch(path, ""); end
   def ls_files; @canned[:ls_files] || []; end
+  def walk_working_tree; @canned[:walk_working_tree] || []; end
+
+  # Returns the direct children for the given subpath from a canned hash.
+  # The hash maps subpath strings (e.g. ".", "lib") to arrays of entry names.
+  def entries(subpath = ".")
+    (@canned[:entries] || {})[subpath] || []
+  end
+
+  def ignored?(path)
+    (@canned[:ignored] || {})[path] || false
+  end
 end
 
 module TempRepo

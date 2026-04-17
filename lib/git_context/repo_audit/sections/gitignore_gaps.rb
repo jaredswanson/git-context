@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "find"
-
 module GitContext
   module RepoAudit
     module Sections
@@ -25,7 +23,7 @@ module GitContext
         def scan(git)
           grouped = Hash.new { |h, k| h[k] = [] }
 
-          walk(git.repo_path).each do |relative_path|
+          git.walk_working_tree.each do |relative_path|
             category = classify(relative_path)
             next unless category
             next if git.ignored?(relative_path)
@@ -34,21 +32,6 @@ module GitContext
           end
 
           grouped
-        end
-
-        def walk(root)
-          paths = []
-          Find.find(root) do |path|
-            base = File.basename(path)
-            if File.directory?(path) && base == ".git"
-              Find.prune
-            end
-            next if path == root
-
-            rel = path.sub(%r{\A#{Regexp.escape(root)}/?}, "")
-            paths << (File.directory?(path) ? "#{rel}/" : rel)
-          end
-          paths
         end
 
         def classify(path)
