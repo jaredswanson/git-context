@@ -184,3 +184,62 @@ class CLIRepoAuditTest < Minitest::Test
     assert_match(/missing_standard_files/, out.string)
   end
 end
+
+class CLICommandDispatchTest < Minitest::Test
+  def test_help_lists_action_commands
+    out = StringIO.new
+    begin
+      GitContext::CLI.new(argv: ["--help"], stdout: out).run
+    rescue SystemExit
+    end
+    assert_match(/repo-init/, out.string)
+    assert_match(/commit-apply/, out.string)
+  end
+
+  def test_unknown_command_shows_all_commands_in_error
+    err = StringIO.new
+    assert_raises(SystemExit) do
+      GitContext::CLI.new(argv: ["bogus"], stdout: StringIO.new, stderr: err).run
+    end
+    assert_match(/commit/, err.string)
+    assert_match(/repo-audit/, err.string)
+    assert_match(/repo-init/, err.string)
+    assert_match(/commit-apply/, err.string)
+  end
+
+  def test_list_sections_without_command_shows_only_preset_commands
+    out = StringIO.new
+    begin
+      GitContext::CLI.new(argv: ["--list-sections"], stdout: out).run
+    rescue SystemExit
+    end
+    assert_match(/^commit:$/, out.string)
+    assert_match(/^repo-audit:$/, out.string)
+    refute_match(/repo-init/, out.string)
+    refute_match(/commit-apply/, out.string)
+  end
+
+  def test_repo_init_stub_exits_2_with_not_implemented_message
+    err = StringIO.new
+    exit_status = nil
+    begin
+      GitContext::CLI.new(argv: ["repo-init"], stdout: StringIO.new, stderr: err).run
+    rescue SystemExit => e
+      exit_status = e.status
+    end
+    assert_equal 2, exit_status
+    assert_match(/not yet implemented/, err.string)
+  end
+
+  def test_commit_apply_stub_exits_2_with_not_implemented_message
+    err = StringIO.new
+    exit_status = nil
+    begin
+      GitContext::CLI.new(argv: ["commit-apply"], stdout: StringIO.new, stderr: err).run
+    rescue SystemExit => e
+      exit_status = e.status
+    end
+    assert_equal 2, exit_status
+    assert_match(/not yet implemented/, err.string)
+  end
+end
