@@ -6,4 +6,5 @@ module GitContext
 end
 
 require "git_context/repo_audit/offenders"
-# sections + preset wired in Tasks 6–9.
+require "git_context/repo_audit/sections"
+require "git_context/repo_audit/preset"

@@ -90,3 +90,30 @@ class CLITest < Minitest::Test
     assert_match(/Usage:/, err.string)
   end
 end
+
+class CLIRepoAuditTest < Minitest::Test
+  include TempRepo
+
+  def test_runs_repo_audit_preset
+    in_temp_repo do |dir|
+      write_file(".env", "x")
+
+      out = StringIO.new
+      GitContext::CLI.new(argv: ["repo-audit", "--repo", dir], stdout: out).run
+
+      assert_match(/## Gitignore gaps/, out.string)
+      assert_match(/## Tracked secrets/, out.string)
+      assert_match(/## Missing standard files/, out.string)
+      assert_match(/\.env/, out.string)
+    end
+  end
+
+  def test_repo_audit_list_sections
+    out = StringIO.new
+    GitContext::CLI.new(argv: ["repo-audit", "--list-sections"], stdout: out).run
+
+    assert_match(/gitignore_gaps/, out.string)
+    assert_match(/tracked_secrets/, out.string)
+    assert_match(/missing_standard_files/, out.string)
+  end
+end

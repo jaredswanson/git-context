@@ -7,8 +7,8 @@ module GitContext
   # a Report. All user-facing errors go to stderr and exit nonzero.
   class CLI
     PRESETS = {
-      "commit"     => -> { GitContext::Commit::Preset.new }
-      # "repo-audit" is registered in Task 5.
+      "commit"     => -> { GitContext::Commit::Preset.new },
+      "repo-audit" => -> { GitContext::RepoAudit::Preset.new }
     }.freeze
 
     def initialize(argv:, stdout: $stdout, stderr: $stderr)
