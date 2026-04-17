@@ -34,6 +34,7 @@ Options:
   --add a,b             Add sections to the preset
   --skip a,b            Remove sections from the preset
   --list-sections       Print available sections for the preset and exit
+  --help, -h            Show help and exit
 ```
 
 Examples:
@@ -44,7 +45,12 @@ git-context commit --skip staged_diff,unstaged_diff
 git-context repo-audit --repo ~/code/myproj
 git-context repo-audit --only gitignore_gaps
 git-context commit --list-sections
+git-context --list-sections
+git-context --help
 ```
+
+Note: `git-context --list-sections` (without preset) shows all sections grouped by preset.
+`git-context --help` exits with status 0 to stdout.
 
 ## Library
 
