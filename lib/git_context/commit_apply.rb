@@ -64,7 +64,10 @@ module GitContext
 
       sources = [
         options[:message],
-        options[:message_file] ? File.read(options[:message_file]) : nil,
+        options[:message_file] ? (
+          # --message-file reads an arbitrary caller-supplied path, not a repo-root path — Workspace not used
+          File.read(options[:message_file])
+        ) : nil,
         options[:message_stdin] ? @stdin.read : nil
       ].compact
 

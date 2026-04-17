@@ -10,7 +10,7 @@ module GitContext
     # proposals. Collaborates with Git (read+write), Workspace (filesystem
     # writes + gh/tea), and JsonReport (structured output).
     class Command
-      VERSION_TAG = "0.4.0"
+      VERSION_TAG = GitContext::VERSION
 
       def initialize(git:, workspace:, argv: [], stdout: $stdout, stderr: $stderr)
         @git = git

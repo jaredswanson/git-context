@@ -33,7 +33,8 @@ module GitContext
         ).run
       },
       "commit-apply" => lambda { |argv, stdout, stderr|
-        repo   = argv.include?("--repo") ? argv[argv.index("--repo") + 1] : Dir.pwd
+        argv = argv.dup
+        repo = CLI.extract_repo_flag(argv) || Dir.pwd
         git    = Git.new(repo)
         CommitApply.new(git: git, argv: argv, stdout: stdout, stderr: stderr).run
       }
