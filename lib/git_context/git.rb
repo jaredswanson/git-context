@@ -45,6 +45,16 @@ module GitContext
       run("ls-files", "--others", "--exclude-standard").split("\n").reject(&:empty?)
     end
 
+    def ls_files
+      run("ls-files").split("\n").reject(&:empty?)
+    end
+
+    def ignored?(path)
+      # git check-ignore returns 0 when the path is ignored, 1 when not.
+      _out, _err, status = Open3.capture3("git", "-C", @repo, "check-ignore", "-q", "--", path)
+      status.exitstatus == 0
+    end
+
     def read_file(path)
       full = File.join(@repo, path)
       return "(directory)\n" if File.directory?(full)

@@ -120,3 +120,50 @@ class GitTest < Minitest::Test
     end
   end
 end
+
+class GitLsFilesTest < Minitest::Test
+  include TempRepo
+
+  def test_ls_files_returns_tracked_files
+    in_temp_repo do |dir|
+      write_file("a.rb", "a")
+      write_file("sub/b.rb", "b")
+      git("add -A")
+      git("commit -q -m init")
+
+      files = GitContext::Git.new(dir).ls_files
+      assert_includes files, "a.rb"
+      assert_includes files, "sub/b.rb"
+    end
+  end
+
+  def test_ls_files_is_empty_for_fresh_repo
+    in_temp_repo do |dir|
+      assert_empty GitContext::Git.new(dir).ls_files
+    end
+  end
+end
+
+class GitIgnoredTest < Minitest::Test
+  include TempRepo
+
+  def test_ignored_returns_true_when_path_matches_gitignore
+    in_temp_repo do |dir|
+      write_file(".gitignore", "*.log\n")
+      assert GitContext::Git.new(dir).ignored?("errors.log")
+    end
+  end
+
+  def test_ignored_returns_false_when_path_does_not_match
+    in_temp_repo do |dir|
+      write_file(".gitignore", "*.log\n")
+      refute GitContext::Git.new(dir).ignored?("app.rb")
+    end
+  end
+
+  def test_ignored_returns_false_when_no_gitignore
+    in_temp_repo do |dir|
+      refute GitContext::Git.new(dir).ignored?("anything.log")
+    end
+  end
+end
