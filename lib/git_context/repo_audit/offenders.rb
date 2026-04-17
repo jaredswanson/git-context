@@ -16,11 +16,6 @@ module GitContext
 
       SECRET_PATTERNS = %w[*.pem *.key id_rsa* *credentials* *secret*].freeze
 
-      # Extensions that indicate source or documentation files. Paths with a
-      # secret-shaped basename (containing "secret" or "credentials") but a
-      # source extension are implementation files, not leaked credentials.
-      SOURCE_EXTENSIONS = %w[.rb .py .js .ts .go .md .txt].freeze
-
       ALL_PATTERNS = CATEGORIES.values.flatten.freeze
 
       def self.all_patterns
@@ -32,13 +27,7 @@ module GitContext
       # Glob patterns are matched against both the full path and the basename
       # so that "*.log" catches "errors.log" and "foo/bar/baz.log".
       # Plain names (no slash, no glob) match the basename only.
-      #
-      # Secret-name patterns (*secret*, *credentials*) skip paths whose
-      # extension identifies them as source or documentation — e.g.
-      # tracked_secrets.rb is implementation, not a leaked credential.
       def self.matches?(path, pattern)
-        return false if secret_name_pattern?(pattern) && source_extension?(path)
-
         if pattern.end_with?("/")
           prefix = pattern
           path.start_with?(prefix) || path.include?("/#{prefix}")
@@ -49,20 +38,6 @@ module GitContext
           File.basename(path) == pattern
         end
       end
-
-      # Returns true when pattern is a name-based secret glob (*secret*,
-      # *credentials*) as opposed to an extension-based one (*.pem).
-      def self.secret_name_pattern?(pattern)
-        pattern.start_with?("*") && !pattern.start_with?("*.")
-      end
-      private_class_method :secret_name_pattern?
-
-      # Returns true when path has an extension that marks it as a source or
-      # documentation file.
-      def self.source_extension?(path)
-        SOURCE_EXTENSIONS.include?(File.extname(path))
-      end
-      private_class_method :source_extension?
     end
   end
 end

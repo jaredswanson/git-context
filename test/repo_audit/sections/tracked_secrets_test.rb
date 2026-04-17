@@ -79,4 +79,12 @@ class TrackedSecretsSectionTest < Minitest::Test
 
     assert_match(/app\.credentials\.json/, out)
   end
+
+  def test_does_not_flag_ruby_with_secret_in_name
+    git = FakeGit.new(ls_files: ["my_secret.rb"])
+
+    out = GitContext::RepoAudit::Sections::TrackedSecrets.new.render(git)
+
+    assert_match(/No tracked secrets/, out)
+  end
 end
