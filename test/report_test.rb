@@ -34,7 +34,7 @@ class ReportTest < Minitest::Test
       modified_files: [],
       untracked_files: []
     )
-    report = GitContext::Report.new(git: git)
+    report = GitContext::Report.new(git: git, sections: GitContext::Commit::Preset.new.sections)
 
     out = report.to_s
 

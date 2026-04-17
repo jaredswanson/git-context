@@ -9,7 +9,8 @@ module GitContext
 
     def run
       repo = @argv.first || Dir.pwd
-      @stdout.puts Report.new(git: Git.new(repo)).to_s
+      sections = GitContext::Commit::Preset.new.sections
+      @stdout.puts Report.new(git: Git.new(repo), sections: sections).to_s
     end
   end
 end
