@@ -52,6 +52,52 @@ git-context --help
 Note: `git-context --list-sections` (without preset) shows all sections grouped by preset.
 `git-context --help` exits with status 0 to stdout.
 
+### `repo-init`
+
+Initialize a repo with curated defaults:
+
+```sh
+git-context repo-init
+git-context repo-init --dry-run --json | jq .
+git-context repo-init --yes                 # execute remote-creation proposals
+git-context repo-init --host forgejo --visibility private
+```
+
+### `commit-apply`
+
+Apply a pre-written commit message to staged changes:
+
+```sh
+git add path/to/file.rb
+echo "Add foo feature" | git-context commit-apply --message-stdin
+git-context commit-apply --message "Fix typo in README"
+git-context commit-apply --message-file /tmp/commit-msg.txt --json
+```
+
+Pipeline example (generate commit message via LLM then apply):
+
+```sh
+git-context commit | llm "Write a conventional commit message" | git-context commit-apply --message-stdin
+```
+
+## JSON output
+
+Pass `--json` to any action command for machine-readable output:
+
+```json
+{
+  "command": "repo-init",
+  "version": "0.4.0",
+  "exit_code": 0,
+  "actions_taken": [{ "kind": "git_init", "description": "...", "details": {} }],
+  "proposals": [{ "kind": "create_remote", "description": "...", "details": {}, "suggested_command": "..." }],
+  "context": { "stack": "ruby_gem", "is_git_repo": false },
+  "warnings": [{ "kind": "...", "description": "..." }]
+}
+```
+
+**Stability guarantee:** Top-level keys are stable for v0.4.x. New `kind` values may be added in minor versions; removing or renaming existing kinds is a breaking change.
+
 ## Library
 
 ```ruby
@@ -82,6 +128,13 @@ puts GitContext::Report.new(git: git, sections: sections).to_s
 
 See `docs/standards/` for project conventions and `docs/superpowers/` for
 design decisions.
+
+### Seams
+
+The gem uses two controlled seams:
+
+- **`GitContext::Git`** — all `git` CLI invocations and read-side filesystem inspection.
+- **`GitContext::Workspace`** — write-side filesystem operations and external CLI invocations (`gh`, `tea`). Use `FakeWorkspace` in tests; never stub `File` or `Open3` directly.
 
 ## Development
 
