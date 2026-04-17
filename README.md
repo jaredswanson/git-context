@@ -1,16 +1,19 @@
 # git-context
 
-Gathers the git state you'd normally eyeball before writing a commit message — status, staged/unstaged diffs, recent log, per-file history, and untracked file contents — and assembles it into one structured report. Useful as context for an AI commit-message writer, or just for a quick human overview.
+Composable gem for gathering structured git state and emitting it as context —
+for Claude Code plugins, other AI tools, or humans.
+
+Each "context type" is a submodule (`GitContext::Commit`, `GitContext::RepoAudit`)
+with its own preset (default sections) and sections. Reports compose sections
+via duck typing.
 
 ## Install
-
-Add to your Gemfile:
 
 ```ruby
 gem "git-context"
 ```
 
-Or install directly:
+Or:
 
 ```
 gem install git-context
@@ -19,10 +22,29 @@ gem install git-context
 ## CLI
 
 ```
-git_context [repo_path]
+git-context <preset> [options]
+
+Presets:
+  commit        Pre-commit snapshot (status, diffs, log, file history, untracked)
+  repo-audit    Repo hygiene check (gitignore gaps, tracked secrets, missing files)
+
+Options:
+  --repo PATH           Repo path (default: cwd)
+  --only a,b,c          Run only these sections (overrides preset)
+  --add a,b             Add sections to the preset
+  --skip a,b            Remove sections from the preset
+  --list-sections       Print available sections for the preset and exit
 ```
 
-`repo_path` defaults to the current directory. Output is written to stdout.
+Examples:
+
+```
+git-context commit
+git-context commit --skip staged_diff,unstaged_diff
+git-context repo-audit --repo ~/code/myproj
+git-context repo-audit --only gitignore_gaps
+git-context commit --list-sections
+```
 
 ## Library
 
@@ -30,10 +52,30 @@ git_context [repo_path]
 require "git_context"
 
 git = GitContext::Git.new("/path/to/repo")
-puts GitContext::Report.new(git: git).to_s
+sections = GitContext::Commit::Preset.new.sections
+puts GitContext::Report.new(git: git, sections: sections).to_s
 ```
 
-`Report` accepts a custom `sections:` array — each section is any object responding to `#title` and `#render(git)`. Built-in sections live under `GitContext::Sections` (`Status`, `StagedDiff`, `UnstagedDiff`, `RecentLog`, `FileHistory`, `UntrackedFiles`).
+Build your own composition:
+
+```ruby
+sections = [
+  GitContext::Commit::Sections::Status.new,
+  GitContext::RepoAudit::Sections::GitignoreGaps.new
+]
+puts GitContext::Report.new(git: git, sections: sections).to_s
+```
+
+## Architecture
+
+- `GitContext::Report` — composes sections; no knowledge of git internals.
+- `GitContext::Git` — the only object that shells out to `git`.
+- Sections — duck-typed objects implementing `#title` and `#render(git)`.
+- Presets — objects returning an instantiated `sections` array and a
+  token↔class map.
+
+See `docs/standards/` for project conventions and `docs/superpowers/` for
+design decisions.
 
 ## Development
 
