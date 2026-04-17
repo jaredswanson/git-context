@@ -68,7 +68,7 @@ class CLITest < Minitest::Test
     assert_raises(SystemExit) do
       GitContext::CLI.new(argv: ["bogus"], stdout: StringIO.new, stderr: err).run
     end
-    assert_match(/unknown preset 'bogus'/, err.string)
+    assert_match(/unknown command 'bogus'/, err.string)
     assert_match(/Available: commit/, err.string)
   end
 
@@ -201,6 +201,7 @@ class CLICommandDispatchTest < Minitest::Test
     assert_raises(SystemExit) do
       GitContext::CLI.new(argv: ["bogus"], stdout: StringIO.new, stderr: err).run
     end
+    assert_match(/unknown command/, err.string)
     assert_match(/commit/, err.string)
     assert_match(/repo-audit/, err.string)
     assert_match(/repo-init/, err.string)

@@ -43,7 +43,7 @@ module GitContext
       handler = COMMANDS[command_name]
       unless handler
         all_commands = (PRESETS.keys + ACTION_COMMANDS.keys).join(", ")
-        @stderr.puts "unknown preset '#{command_name}'. Available: #{all_commands}"
+        @stderr.puts "unknown command '#{command_name}'. Available: #{all_commands}"
         exit(1)
       end
 
