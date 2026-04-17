@@ -44,6 +44,7 @@ module GitContext
         when :node         then @root_entries.include?("package.json")
         when :python       then @root_entries.include?("pyproject.toml") ||
                                 @root_entries.include?("setup.py")
+        else raise ArgumentError, "unknown stack: #{stack}"
         end
       end
 

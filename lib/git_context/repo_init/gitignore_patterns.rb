@@ -33,7 +33,7 @@ module GitContext
       end
 
       def self.merged(stacks)
-        stacks.flat_map { |s| self.for(s) }.uniq
+        stacks.flat_map { |s| GitignorePatterns.for(s) }.uniq
       end
     end
   end
