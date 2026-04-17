@@ -69,7 +69,7 @@ module GitContext
     # sorting. Raises if the resolved path escapes the repo.
     def entries(subpath = ".")
       resolved = File.expand_path(File.join(@repo_path, subpath))
-      raise ArgumentError, "subpath escapes repo root" unless resolved.start_with?(@repo_path)
+      raise ArgumentError, "subpath escapes repo root" unless resolved == @repo_path || resolved.start_with?("#{@repo_path}/")
 
       Dir.children(resolved)
     end
@@ -85,10 +85,10 @@ module GitContext
 
     def walk_dir(abs_dir, prefix, paths)
       Dir.children(abs_dir).each do |child|
-        next if prefix.empty? && child == ".git"
+        next if child == ".git"
 
         abs_child = File.join(abs_dir, child)
-        rel = prefix.empty? ? child : "#{prefix}#{child}"
+        rel = "#{prefix}#{child}"
 
         if File.directory?(abs_child)
           paths << "#{rel}/"

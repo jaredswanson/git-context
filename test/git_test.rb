@@ -196,6 +196,18 @@ class GitWalkWorkingTreeTest < Minitest::Test
     end
   end
 
+  def test_walk_working_tree_prunes_nested_dot_git
+    in_temp_repo do |dir|
+      FileUtils.mkdir_p(File.join(dir, "sub", ".git"))
+      write_file("sub/file.rb", "x")
+
+      paths = GitContext::Git.new(dir).walk_working_tree
+
+      refute paths.any? { |p| p.include?(".git") },
+             "Expected nested .git to be pruned, but found: #{paths.select { |p| p.include?('.git') }.inspect}"
+    end
+  end
+
   def test_walk_working_tree_appends_slash_to_directories
     in_temp_repo do |dir|
       write_file("sub/file.rb", "x")
