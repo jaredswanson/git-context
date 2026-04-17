@@ -2,16 +2,9 @@
 
 module GitContext
   module RepoAudit
-    # Default section composition for repo hygiene audit.
     class Preset < GitContext::Preset
-      def name
-        "repo-audit"
-      end
-
-      def default_tokens
-        %w[gitignore_gaps tracked_secrets missing_standard_files]
-      end
-
+      def name = "repo-audit"
+      def default_tokens = %w[gitignore_gaps tracked_secrets missing_standard_files]
       private
 
       def factories

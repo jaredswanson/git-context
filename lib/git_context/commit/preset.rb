@@ -2,15 +2,9 @@
 
 module GitContext
   module Commit
-    # Default section composition for pre-commit context gathering.
     class Preset < GitContext::Preset
-      def name
-        "commit"
-      end
-
-      def default_tokens
-        %w[status staged_diff unstaged_diff recent_log file_history untracked_files]
-      end
+      def name = "commit"
+      def default_tokens = %w[status staged_diff unstaged_diff recent_log file_history untracked_files]
 
       private
 
