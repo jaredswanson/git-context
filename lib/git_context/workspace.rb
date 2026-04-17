@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "fileutils"
 require "open3"
 
 module GitContext
@@ -62,7 +63,9 @@ module GitContext
 
     # Returns true if +binary+ is available on PATH.
     def which(binary)
-      !`which #{Shellwords.shellescape(binary)} 2>/dev/null`.strip.empty?
+      ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).any? do |dir|
+        File.executable?(File.join(dir, binary))
+      end
     end
 
     private
@@ -77,7 +80,7 @@ module GitContext
     end
 
     def run_external(binary, *args)
-      out, err, status = Dir.chdir(@repo_path) { Open3.capture3(binary, *args) }
+      out, err, status = Open3.capture3(binary, *args, chdir: @repo_path.to_s)
       Result.new(success?: status.success?, output: out, error: err)
     rescue => e
       Result.new(success?: false, output: "", error: e.message)
