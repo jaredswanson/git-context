@@ -6,3 +6,8 @@
 /pkg/
 /spec/reports/
 /tmp/
+
+# Added by git-context v0.4.0 (stack: ruby_gem)
+*.gem
+Gemfile.lock
+/.yardoc/

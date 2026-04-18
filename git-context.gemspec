@@ -5,7 +5,7 @@ require_relative "lib/git_context/version"
 Gem::Specification.new do |spec|
   spec.name = "git-context"
   spec.version = GitContext::VERSION
-  spec.authors = ["jared"]
+  spec.authors = ["Jared Swanson"]
   spec.email = ["jared@swansoncloud.com"]
 
   spec.summary = "Composable gem that gathers structured git state as context for AI tools and humans."
